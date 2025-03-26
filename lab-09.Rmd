@@ -202,3 +202,40 @@ compas %>%
   )
 
 ```
+
+## Part 2 - Risk scores and recidivism
+
+
+```{r risk score to recidivism visual}
+
+compas %>%
+  ggplot(aes(
+    x = two_year_recid,
+    y = decile_score
+  ))+
+  geom_smooth(formula = y~x, se = FALSE, color = "black")+
+   labs(
+    x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
+    y = "COMPAS risk score",
+    title = "The relationship between risk scores and actual recidivism"
+  )
+
+```
+
+Assuming I did this correctly, it appears that recidivism, on average,  increases COMPAS risk score.
+
+```{r alt plot?}
+
+compas %>%
+  ggplot(aes(
+    x = decile_score
+  ))+
+  geom_histogram()+
+  facet_wrap(~ two_year_recid, labeller = as_labeller(c(`0` = "Recidivated within two years", `1` = "Did not recidivate within two years")))+
+  labs(
+    x = "COMPAS risk score from 1-10 (higher = greater risk)",
+    y = NULL,
+    title = "The relationship between risk scores and actual recidivism"
+  )
+
+```
