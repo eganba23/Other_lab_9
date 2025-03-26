@@ -1,15 +1,13 @@
 ---
 title: "Lab 09: Algorithmic Bias"
-author: "Insert your name here"
-date: "Insert date here"
+author: "Benjamin Egan"
+date: "3/26/25"
 output: github_document
 ---
 
-## Load Packages and Data  
+Here is the link to the assignment page: https://datascience4psych.github.io/DataScience4Psych/lab09.html. This includes the relevant information for the assignment alongside required questions I needed to answer.
 
-First, let's load the necessary packages:  
-
-```{r load-packages, message = FALSE}
+```{r load-packages, message = FALSE, echo = FALSE}
 library(tidyverse)
 library(fairness)
 ```
@@ -18,8 +16,8 @@ library(fairness)
 
 For this lab, we'll use the COMPAS dataset compiled by ProPublica. The data has been preprocessed and cleaned for you. You'll have to load it yourself. The dataset is available in the `data` folder, but I've changed the file name from `compas-scores-two-years.csv` to `compas-scores-2-years.csv`. I've done this help you practice debugging code when you encounter an error.
 
-```{r}
-compas <- read_csv("data/compas-scores-two-years.csv")
+```{r load dataset}
+compas <- read_csv("data/compas-scores-2-years.csv")
 ```
 
 
