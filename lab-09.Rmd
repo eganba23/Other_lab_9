@@ -1,5 +1,5 @@
 ---
-title: "Lab 09: Algorithmic Bias"
+title: "Lab 09B: Algorithmic Bias"
 author: "Benjamin Egan"
 date: "3/26/25"
 output: github_document
@@ -10,17 +10,195 @@ Here is the link to the assignment page: https://datascience4psych.github.io/Dat
 ```{r load-packages, message = FALSE, echo = FALSE}
 library(tidyverse)
 library(fairness)
+library(janitor)
 ```
 
 ### The data
 
-For this lab, we'll use the COMPAS dataset compiled by ProPublica. The data has been preprocessed and cleaned for you. You'll have to load it yourself. The dataset is available in the `data` folder, but I've changed the file name from `compas-scores-two-years.csv` to `compas-scores-2-years.csv`. I've done this help you practice debugging code when you encounter an error.
-
+Cleaning up some of the names
 ```{r load dataset}
-compas <- read_csv("data/compas-scores-2-years.csv")
+compas <- read_csv("data/compas-scores-2-years.csv") %>% 
+  clean_names() %>% 
+  rename(decile_score = decile_score_12,
+                         priors_count = priors_count_15)
+view(compas)
+
+nrow(compas)
+ncol(compas)
 ```
 
 
-## Additional Exercises  
+## Part 1 - Exploring the Data
 
 Almost there! Keep building on your work and follow the same structure for any remaining exercises. Each exercise builds on the last, so take your time and make sure your code is working as expected.  
+
+1. Each row of the dataset represents an individual who arrested in Broward County, Florida. There are 7,214 people in the dataset, and 53 different variables
+
+2. There should be 7,214 unique people in the dataset. After a quick glance through the dataset using view(), I haven't seen a repeated ID number or person's name.
+
+### Visualizing demographic data
+
+#### The distribution of defendants by race
+```{r graph race, warning = FALSE}
+Race_graph <- compas %>%
+  ggplot(aes(
+    x = race
+  ))+
+  geom_histogram(stat = "count", fill = "orange", alpha = .7)+
+  theme_bw()+
+  geom_text(
+    stat = "count",
+    aes(x = race,
+    y = ..count..,
+    label = ..count..),
+    size = 4, 
+    color = "black",
+    vjust = -0.2) +
+  labs(
+    x = "Race",
+    y = NULL,
+    title = "Distribution of Defendents by Race",
+    subtitle = "People arrested in Broward County, Florida"
+  )
+
+Race_graph
+
+```
+
+#### The distribution of defendants by sex
+```{r graph sex, warning = FALSE}
+Sex_graph <- compas %>%
+  ggplot(aes(
+    x = sex
+  ))+
+  geom_histogram(stat = "count", fill = c("pink", "steelblue2"))+
+  theme_bw()+
+  geom_text(
+    stat = "count",
+    aes(x = sex,
+    y = (..count../2),
+    label = ..count..),
+    size = 7, 
+    color = "black") +
+  labs(
+    x = "Sex",
+    y = NULL,
+    title = "Distribution of Defendents by Sex",
+    subtitle = "People arrested in Broward County, Florida"
+  )
+
+Sex_graph
+
+```
+
+#### The distribution of defendants by age
+```{r graph age, warning = FALSE}
+Age_graph <- compas %>%
+  ggplot(aes(
+    x = age_cat
+  ))+
+  geom_histogram(stat = "count", fill = "gray", alpha = .7)+
+  theme_bw()+
+  geom_text(
+    stat = "count",
+    aes(x = age_cat,
+    y = ..count..,
+    label = ..count..),
+    size = 5, 
+    color = "black",
+    vjust = -0.2) +
+  labs(
+    x = "Age",
+    y = NULL,
+    title = "Distribution of Defendents by Age",
+    subtitle = "People arrested in Broward County, Florida"
+  )
+
+Age_graph
+
+```
+
+
+#### Optional - Graph all on the same page
+
+Here I'm using plot_grid() from the cowplot package as one example of how to do this. There are clear issues (such as size of text), but it will get the job done.
+```{r all graphs together}
+library(cowplot)
+
+plot_grid(Race_graph,Sex_graph, Age_graph)
+
+
+```
+
+I turned to chatGPT to see if it had any suggestions on fixing this issue. It initially recommended adding the arguments ncol = 1, align = "v" to the plot_grid(). This ended up creating this... unique outcome.
+
+![This reminds me of Stretch Armstrong](chat_suggestion.png)
+
+I told it I wanted the Axes to be fixed, and it gave me a great suggestion.
+
+I can take the original dataset and create a subset of the data that just includes race, sex, and age. From there, I can use the wide-to-long transformation, making three separate rows for each person (one for race, one for sex, one for age). Category is the designation of the IV, and Value is what they identify as.
+
+```{r demographic secondary dataset}
+compas_long <- compas %>%
+  pivot_longer(cols = c(race, sex, age_cat), names_to = "Category", values_to = "Value")
+view(compas_long)
+
+```
+
+Now, I can use facet_wrap() using category. This way, I can create three separate graphs side by side. I copied its suggestion and then made edits. These were for style and for aesthetic.
+
+```{r optional demographic 2}
+
+compas_long %>%
+ggplot(aes(
+  x = Value)) +
+  geom_bar(aes(fill = Category), alpha = 0.7) +
+  geom_text(
+    stat = "count",
+    aes(y = ..count.., 
+        label = ..count..),
+    vjust = -0.2,
+    size = 3
+  ) +
+  theme_bw() +
+  facet_wrap(~Category, labeller = as_labeller(c(`age_cat` = "Age", `race` = "Race", `sex` = "Sex")), scales = "free_x")+ # scales = "free_x" keeps different x-scales while aligning axes properly
+  labs(
+    x = NULL,
+    y = "Count",
+    title = "Distribution of Defendants",
+    subtitle = "People arrested in Broward County, Florida"
+  ) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=.5)
+        )
+
+```
+
+The downside is that I can't change the colors of each of the graphs to what I had them.
+
+#### Visualization of the COMPAS risk scores
+
+```{r COMPAS scores visual, warning = FALSE}
+
+compas %>%
+  ggplot(aes(
+    x = decile_score
+  ))+
+  theme_bw()+
+  geom_histogram(stat = "count", fill = "gray")+
+    geom_text(
+    stat = "count",
+    aes(x = decile_score,
+    y = ..count..,
+    label = ..count..),
+    size = 3.5, 
+    color = "black",
+    vjust = -0.2) +
+  labs(
+    x = "COMPAS risk scores",
+    y = NULL,
+    title = "Distribution of Defendents by COMPAS risk",
+    subtitle = "People arrested in Broward County, Florida"
+  )
+
+```
