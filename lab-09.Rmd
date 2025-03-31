@@ -263,14 +263,6 @@ compas %>%
     title = "The relationship between risk scores and actual recidivism"
   )
 
-
-compas %>%
-  ggplot(aes(
-    x = 
-  ))+
-  
-
-
 ```
 
 This plot is more showing the breakdown of COMPAS scores based on recidivism.
@@ -310,22 +302,117 @@ compas_accuracy %>%
   )+
   theme(legend.position = "none")
 
+```
 
-df_percent <- count(percent_accurate, compas_accurate)
+It's hard to tell. Yes there are lots of people who it accurately predicts, but that could be based on how people score on the COMPAS/their recidivism.
 
 
-accurate <- df_percent %>%
+```{r accuracy calcuation}
+
+committed_crime_test <- compas %>%
+  mutate(compas_accurate = case_when(
+    decile_score >= 7 & two_year_recid == 1 ~ "Accurate, committed crime",
+    decile_score < 7 & two_year_recid == 1 ~ "Not acccurate, committed crime",
+    decile_score <= 4 & two_year_recid == 0 ~ "Accurate, no further crime",
+    decile_score > 4 & two_year_recid == 0 ~ "Not accurate, no further crime"
+  ))
+
+df_percent1 <- count(percent_accurate, compas_accurate)
+
+Rec_total_accurate <- df_percent1 %>%
   filter(compas_accurate == 0) %>% select(n)
 
-innacute <- df_percent %>%
+Rec_total_innacute <- df_percent1 %>%
   filter(compas_accurate == 1) %>% select(n)
 
-total <- df_percent %>% summarize(sum = sum(n))
+Rec_total <- df_percent1 %>% summarize(sum = sum(n))
 
-accurate/total*100
+Rec_total_accurate/Rec_total*100
+
+committed_crime <- compas %>%
+  mutate(compas_accurate = case_when(
+    decile_score >= 7 & two_year_recid == 1 ~ 1,
+    decile_score < 7 & two_year_recid == 1 ~ 2,
+    decile_score <= 4 & two_year_recid == 0 ~ 3,
+    decile_score > 4 & two_year_recid == 0 ~ 4
+  ))
+
+
+df_percent2 <- count(committed_crime, compas_accurate)
+
+acc_commit <- df_percent2 %>%
+  filter(compas_accurate == 1) %>% select(n)
+
+not_acc_commit <- df_percent2 %>%
+  filter(compas_accurate == 2) %>% select(n)
+
+acc_no_commit <- df_percent2 %>%
+  filter(compas_accurate == 3) %>% select(n)
+
+not_acc_no_commit <- df_percent2 %>%
+  filter(compas_accurate == 4) %>% select(n)
+
+total_breakdown <- df_percent2 %>% summarize(sum = sum(n))
+
+acc_commit/total_breakdown*100
+
+acc_commit/(acc_commit + not_acc_commit)*100
+
+acc_no_commit/(acc_no_commit+not_acc_no_commit)*100
+
 
 ```
 
-It seems to be accurate to a degree. There is a high amount of people that are ambiguous (i.e. not having a high or low degree of crime).
 
-44% accuracy
+7. The COMPAS algorithm doesn't perform great (44% overall accuracy, 41% accurate among people who commit a crime). It's mostly accurate for predicting people who won't commit another crime (67%).
+
+## Part 3 - Investigating Disparities
+
+
+```{r race disparity}
+
+race_graph <- compas %>%
+filter(race == c("Caucasian","African-American"))
+
+
+race_graph %>%
+  ggplot(aes(
+    x = decile_score
+  ))+
+  facet_wrap(~ race, labeller = as_labeller(c(`Caucasian` = "White", `African-American` = "Black")))+
+  geom_histogram(stat = "count")+
+  labs(
+    x = "COMPAS risk score from 1-10 (higher = greater risk)",
+    y = NULL,
+    title = "Race disparities on the COMPAS scores"
+  )
+
+
+race_graph1 <- race_graph %>%
+  mutate(race_crime = case_when(
+    decile_score >= 7 & race == "White" ~ "White and committed crime",
+    decile_score < 7 & race == "Black" ~ "White and committed crime"
+  ))
+
+race_accurate <- race_graph %>%
+  mutate(race_compas_accurate = case_when(
+    decile_score >= 7 & race == "White" ~ 1,
+    decile_score >= 7 & race == "Black" ~ 0
+  ))
+
+
+race_percent <- count(race_accurate, race_compas_accurate)
+
+White_accurate <- race_percent %>%
+  filter(race_compas_accurate == 1) %>% select(n)
+
+Black_accurate <- race_percent %>%
+  filter(race_compas_accurate == 0) %>% select(n)
+
+Black_accurate/(White_accurate + Black_accurate )*100
+
+
+```
+
+There's a clear difference in distribution between white and black defendants who were classified as high risk.
+
