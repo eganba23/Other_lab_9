@@ -388,20 +388,16 @@ race_graph %>%
   )
 
 
-race_graph1 <- race_graph %>%
-  mutate(race_crime = case_when(
-    decile_score >= 7 & race == "White" ~ "White and committed crime",
-    decile_score < 7 & race == "Black" ~ "White and committed crime"
-  ))
-
 race_accurate <- race_graph %>%
   mutate(race_compas_accurate = case_when(
-    decile_score >= 7 & race == "White" ~ 1,
-    decile_score >= 7 & race == "Black" ~ 0
+    decile_score >= 7 & race == "Caucasian" ~ 1,
+    decile_score >= 7 & race == "African-American" ~ 0
   ))
 
 
 race_percent <- count(race_accurate, race_compas_accurate)
+
+
 
 White_accurate <- race_percent %>%
   filter(race_compas_accurate == 1) %>% select(n)
@@ -414,5 +410,30 @@ Black_accurate/(White_accurate + Black_accurate )*100
 
 ```
 
-There's a clear difference in distribution between white and black defendants who were classified as high risk.
+There's a clear difference in distribution between white and black defendants who were classified as high risk, as 78% of people who had a COMPAS score above 7 were black.
+
+### Q10 - Accuracy of predictions for different racial groups
+
+#### False Positive
+
+```{r false positive accuracy}
+non_recidivists <- race_graph %>%
+  filter(two_year_recid == 0)
+
+non_recidivists  <- non_recidivists %>%
+  mutate(false_positive = case_when(
+    decile_score >= 7 & race == "African_American" ~ 1,
+    decile_score >= 7 & race == "Caucasian" ~ 0,
+  ))
+
+
+black_fp <- non_recidivists %>%
+  filter(false_positive == 1) %>% select(n)
+
+white_fp <- non_recidivists %>%
+  filter(false_positive == 0) %>% select(n)
+
+
+
+```
 
