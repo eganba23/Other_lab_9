@@ -263,3 +263,65 @@ compas %>%
 ```
 
 ![](lab-09_files/figure-gfm/COMPAS%20scores%20visual-1.png)<!-- -->
+
+## Part 2 - Risk scores and recidivism
+
+``` r
+compas %>%
+  ggplot(aes(
+    x = two_year_recid,
+    y = decile_score
+  ))+
+  geom_smooth(formula = y~x, se = FALSE, color = "black")+
+   labs(
+    x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
+    y = "COMPAS risk score",
+    title = "The relationship between risk scores and actual recidivism"
+  )
+```
+
+    ## `geom_smooth()` using method = 'gam'
+
+![](lab-09_files/figure-gfm/risk%20score%20to%20recidivism%20visual-1.png)<!-- -->
+
+Assuming I did this correctly, it appears that recidivism, on average,
+increases COMPAS risk score.
+
+#### Alternate plot
+
+``` r
+compas %>%
+  ggplot(aes(
+    x = decile_score
+  ))+
+  geom_histogram()+
+  facet_wrap(~ two_year_recid, labeller = as_labeller(c(`0` = "Recidivated within two years", `1` = "Did not recidivate within two years")))+
+  labs(
+    x = "COMPAS risk score from 1-10 (higher = greater risk)",
+    y = NULL,
+    title = "The relationship between risk scores and actual recidivism"
+  )
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](lab-09_files/figure-gfm/alt%20plot?-1.png)<!-- -->
+
+This plot is more showing the breakdown of COMPAS scores based on
+recidivism.
+
+### COMPAS Accuracy
+
+``` r
+compas1 <- compas %>%
+  mutate(compas_accurate = case_when(
+    decile_score >= 7 & two_year_recid == 1 ~ 1,
+    decile_score > 7 & two_year_recid == 0 ~ 0,
+    decile_score <= 4 & two_year_recid == 0 ~ 1,
+    decile_score > 4 & two_year_recid == 1 ~ 0
+  ))
+
+
+
+view(compas)
+```
