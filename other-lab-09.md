@@ -52,10 +52,6 @@ ncol(compas)
 
 ## Part 1 - Exploring the Data
 
-Almost there! Keep building on your work and follow the same structure
-for any remaining exercises. Each exercise builds on the last, so take
-your time and make sure your code is working as expected.
-
 1.  Each row of the dataset represents an individual who arrested in
     Broward County, Florida. There are 7,214 people in the dataset, and
     53 different variables
@@ -267,25 +263,6 @@ compas %>%
 ``` r
 compas %>%
   ggplot(aes(
-    x = two_year_recid,
-    y = decile_score
-  ))+
-  geom_smooth(formula = y~x, color = "black")+
-  theme_bw()+
-   labs(
-    x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
-    y = "COMPAS risk score",
-    title = "The relationship between risk scores and actual recidivism"
-  )
-```
-
-    ## `geom_smooth()` using method = 'gam'
-
-![](other-lab-09_files/figure-gfm/risk%20score%20to%20recidivism%20visual-1.png)<!-- -->
-
-``` r
-compas %>%
-  ggplot(aes(
     x = decile_score
   ))+
   facet_wrap(~two_year_recid)+
@@ -300,6 +277,25 @@ compas %>%
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
+![](other-lab-09_files/figure-gfm/risk%20score%20to%20recidivism%20visual-1.png)<!-- -->
+
+``` r
+compas %>%
+  ggplot(aes(
+    x = two_year_recid,
+    y = decile_score
+  ))+
+  geom_smooth(formula = y~x, color = "black")+
+  theme_bw()+
+   labs(
+    x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
+    y = "COMPAS risk score",
+    title = "The relationship between risk scores and actual recidivism"
+  )
+```
+
+    ## `geom_smooth()` using method = 'gam'
+
 ![](other-lab-09_files/figure-gfm/risk%20score%20to%20recidivism%20visual-2.png)<!-- -->
 
 Assuming I did this correctly, it appears that recidivism, on average,
@@ -313,15 +309,17 @@ compas %>%
     x = decile_score
   ))+
   geom_histogram()+
-      geom_text(
-    stat = "count",
+  geom_text(
     aes(x = decile_score,
-    y = ..count..,
-    label = ..count..),
+        y = ..count..,
+        label = ..count..),
+    stat = "count",
     size = 3.5, 
     color = "black",
     vjust = -0.2) +
-  facet_wrap(~ two_year_recid, labeller = as_labeller(c(`0` = "Recidivated within two years", `1` = "Did not recidivate within two years")))+
+  facet_wrap(~ two_year_recid, 
+             labeller = as_labeller(c(`0` = "Recidivated within two years", `1` = "Did not recidivate within two 
+                                      years")))+
   labs(
     x = "COMPAS risk score from 1-10 (higher = greater risk)",
     y = NULL,
