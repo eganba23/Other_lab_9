@@ -527,7 +527,9 @@ compas %>%
     y = priors_count,
     color = race
   ))+
-  geom_jitter(width = .1, alpha = .6)
+  geom_smooth()+
+  geom_jitter(width = .1, alpha = .6)+
+  theme_bw()
 
 ```
 
@@ -541,9 +543,9 @@ race_graph %>%
     y = priors_count
   ))+
   geom_smooth()+
-  geom_jitter(width = .1, alpha = .6)+
+  geom_jitter(width = .15, alpha = .6)+
   facet_wrap(~race)+
-
+  theme_bw()+
   labs(
     x = "Risk score",
     y = "Number of prior offenses",
@@ -552,5 +554,5 @@ race_graph %>%
 
 ```
 
-Here you can tell there are way less white defendants higher up on risk scale, and that African Americans have more prior convictions. It looks like the algorithm doesn't weigh convictions differently? I'm acutally not quite sure.
+Here you can tell there are way less white defendants higher up on risk scale, and that African Americans have more prior convictions. It looks like the algorithm doesn't weigh convictions differently? I'm actually not quite sure.
 
