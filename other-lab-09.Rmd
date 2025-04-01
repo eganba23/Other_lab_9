@@ -141,7 +141,7 @@ I can take the original dataset and create a subset of the data that just includ
 ```{r demographic secondary dataset}
 compas_long <- compas %>%
   pivot_longer(cols = c(race, sex, age_cat), names_to = "Category", values_to = "Value")
-view(compas_long)
+#view(compas_long)
 
 ```
 
@@ -416,24 +416,141 @@ There's a clear difference in distribution between white and black defendants wh
 
 #### False Positive
 
+I'll admit I tried this 30 different ways. I turned to ChatGPT to ask for help. We went back and forth on code that didn't initially work, and I teased out what parts weren't working and what I truly needed. We settled on this code.
 ```{r false positive accuracy}
+
 non_recidivists <- race_graph %>%
   filter(two_year_recid == 0)
 
-non_recidivists  <- non_recidivists %>%
-  mutate(false_positive = case_when(
-    decile_score >= 7 & race == "African_American" ~ 1,
-    decile_score >= 7 & race == "Caucasian" ~ 0,
-  ))
+
+total_non_recid <- non_recidivists %>%
+  group_by(race) %>%
+  summarise(total_non_recid = n())
 
 
-black_fp <- non_recidivists %>%
-  filter(false_positive == 1) %>% select(n)
+false_positives <- non_recidivists %>%
+  filter(decile_score >= 7) %>%
+  group_by(race) %>%
+  summarise(false_positives = n())
 
-white_fp <- non_recidivists %>%
-  filter(false_positive == 0) %>% select(n)
 
+fpr_results <- left_join(false_positives, total_non_recid, by = "race") %>%
+  mutate(FPR = false_positives / total_non_recid * 100)
+
+fpr_results
 
 
 ```
+
+#### False Negative
+
+I edited the code from above.
+
+```{r false negative accuracy}
+
+recidivists <- race_graph %>%
+  filter(two_year_recid == 1)
+
+
+total_recid <- recidivists %>%
+  group_by(race) %>%
+  summarise(total_recid = n())
+
+
+false_negatives <- recidivists %>%
+  filter(decile_score <= 4) %>%
+  group_by(race) %>%
+  summarise(false_negatives = n())
+
+
+fnr_results <- left_join(false_negatives, total_recid, by = "race") %>%
+  mutate(FNR = false_negatives / total_recid * 100)
+
+fnr_results
+
+```
+
+#### Visualizing False positives and negatives
+
+```{r visualize FP and FN}
+
+error_rates1 <- merge(fnr_results,fpr_results, by="race")
+
+error_rate_adjusted <- error_rates1 %>%
+  pivot_longer(cols = -c(race, total_recid,), names_to = "Error_type")
+
+error_rate_adjusted %>%
+  ggplot(aes(
+    x = race, 
+    y = value, 
+    group = Error_type,
+    color = Error_type
+  )) +
+  geom_line(size = 1) +
+  geom_point(size = 3) +
+  facet_wrap(~Error_type, scales = "free", 
+      labeller = as_labeller(c(
+         `false_negatives` = "False Negatives", 
+         `false_positives` = "False Positives", 
+         `FNR` = "False Negative Proportion",
+         `FPR` = "False Positive Proportion", 
+         `total_non_recid` = "Non-recidivism"
+             ))) +
+  scale_color_manual(values = c(
+    "false_negatives" = "red",
+    "false_positives" = "blue",
+    "FNR" = "darkgreen",
+    "FPR" = "purple",
+    "total_non_recid" = "orange"
+  )) +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = -10, vjust = 0.5, hjust=.5))+
+  labs(
+    x = "Race",
+    y = NULL,
+    title = "Accuracy of predictions for different racial groups",
+    color = "Prediction Results"
+  )
+
+```
+
+Based on the above, we can see that Black defendants have higher false positives. This means black defendants are more likely to be non-recidivists who were classified as high risk. Although there were more false negatives (recidivists who were classified as low risk), this can be explained by the false negative proportion. There were twice as many black defendants classified as recidivists than white defendants.
+
+
+## Part 4 - Understanding the source bias
+
+```{r prior and risk score visual, fig.height=8, fig.width=10}
+
+compas %>%
+  ggplot(aes(
+    x = decile_score,
+    y = priors_count,
+    color = race
+  ))+
+  geom_jitter(width = .1, alpha = .6)
+
+```
+
+This is really hard to see. You can kind of tell there's more green (Caucasian) lower on the risk score and more red (African American) higher up. I filtered to only look at Caucasian and African American individuals and put them side by side. 
+
+```{r other prior and risk score visual}
+
+race_graph %>%
+  ggplot(aes(
+    x = decile_score,
+    y = priors_count
+  ))+
+  geom_smooth()+
+  geom_jitter(width = .1, alpha = .6)+
+  facet_wrap(~race)+
+
+  labs(
+    x = "Risk score",
+    y = "Number of prior offenses",
+    title = "Race discrepancies for the number of convictions"
+  )
+
+```
+
+Here you can tell there are way less white defendants higher up on risk scale, and that African Americans have more prior convictions. It looks like the algorithm doesn't weigh convictions differently? I'm acutally not quite sure.
 
