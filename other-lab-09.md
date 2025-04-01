@@ -329,7 +329,7 @@ compas %>%
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](other-lab-09_files/figure-gfm/alt%20plot?-1.png)<!-- -->
+![](other-lab-09_files/figure-gfm/alt%20plot-1.png)<!-- -->
 
 This plot is more showing the breakdown of COMPAS scores based on
 recidivism.

@@ -240,7 +240,7 @@ Assuming I did this correctly, it appears that recidivism, on average, increases
 
 
 #### Alternate plot
-```{r alt plot?}
+```{r alt plot}
 
 compas %>%
   ggplot(aes(
