@@ -1,16 +1,14 @@
 Lab 09B: Algorithmic Bias
 ================
 Benjamin Egan
-3/26/25
+4/1/25
 
 Here is the link to the assignment page:
 <https://datascience4psych.github.io/DataScience4Psych/lab09.html>. This
 includes the relevant information for the assignment alongside required
 questions I needed to answer.
 
-    ## Warning: package 'purrr' was built under R version 4.3.3
-
-    ## Warning: package 'janitor' was built under R version 4.3.3
+#### Note - This assignment is a work in progress and my answers may reflect confusion
 
 ### The data
 
@@ -458,7 +456,7 @@ race_graph <- compas %>%
 filter(race == c("Caucasian","African-American"))
 
 
-race_graph %>%
+COMPAS_race_graph <- race_graph %>%
   ggplot(aes(
     x = decile_score
   ))+
@@ -473,6 +471,10 @@ race_graph %>%
 
     ## Warning in geom_histogram(stat = "count"): Ignoring unknown parameters:
     ## `binwidth`, `bins`, and `pad`
+
+``` r
+COMPAS_race_graph
+```
 
 ![](other-lab-09_files/figure-gfm/race%20disparity-1.png)<!-- -->
 
@@ -636,10 +638,178 @@ many black defendants classified as recidivists than white defendants.
 compas %>%
   ggplot(aes(
     x = decile_score,
-    y = priors_count
+    y = priors_count,
+    color = race
   ))+
-  geom_jitter(width = .5, alpha = .6)+
-  facet_wrap(~race)
+  geom_smooth()+
+  geom_jitter(width = .1, alpha = .6)+
+  theme_bw()
 ```
 
-![](other-lab-09_files/figure-gfm/prior%20to%20risk%20score%20visual-1.png)<!-- -->
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Failed to fit group 2.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+    ## Warning: Failed to fit group 5.
+    ## Caused by error in `smooth.construct.cr.smooth.spec()`:
+    ## ! x has insufficient unique values to support 10 knots: reduce k.
+
+![](other-lab-09_files/figure-gfm/prior%20and%20risk%20score%20visual-1.png)<!-- -->
+
+This is really hard to see. You can kind of tell there’s more green
+(Caucasian) lower on the risk score and more red (African American)
+higher up. I filtered to only look at Caucasian and African American
+individuals and put them side by side.
+
+``` r
+race_graph %>%
+  ggplot(aes(
+    x = decile_score,
+    y = priors_count
+  ))+
+  geom_smooth()+
+  geom_jitter(width = .15, alpha = .6)+
+  facet_wrap(~race)+
+  theme_bw()+
+  labs(
+    x = "Risk score",
+    y = "Number of prior offenses",
+    title = "Race discrepancies for the number of convictions"
+  )
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+![](other-lab-09_files/figure-gfm/other%20prior%20and%20risk%20score%20visual-1.png)<!-- -->
+
+Here you can tell there are way less white defendants higher up on risk
+scale, and that African Americans have more prior convictions. It looks
+like the algorithm doesn’t weigh convictions differently? I’m actually
+not quite sure.
+
+13. \[I’ll start by saying I didn’t exactly understand the question\] I
+    think there is evidence supporting ProPublica’s claim. There is a
+    higher amount of false positives for Black defendants compared to
+    white defendants. Additionally, the accuracy is poor (44%),
+    suggesting that focusing on calibration might lead to errors.
+
+## Part 5 - Designing a more fair algorithm
+
+14. One of the first things I would look at is the the charge types. The
+    current algorithm does not take into account the type of crimes
+    committed. I am thinking more violent crimes would lead to a better
+    measure of likelihood of committing another crime. I am also
+    thinking that juvenile offenses could be a good predictor, as people
+    with more juvenile offenses and more felonies (compared to
+    misdemeanors) would indicate future crime.
+
+15. A fair algorithm would probably have to weigh human bias. This could
+    mean understanding and factoring in racism, sexism, etc. For
+    example, black people might be more likely to have a false positive
+    arrest (i.e. arrested while innocent). To some it might look
+    mathematically wrong to weight black defendants differently compared
+    to white defendants, but this might increases our accuracy.
+
+16. Algorithms should be uses as a guide, not as a decision maker.
+    Knowing the current accuracy of COMPAS is so low, a human needs to
+    make the final decision as to an individual’s status. Based on what
+    I’ve seen, I would make it policy that any evidence for creating
+    policy that is supported by an algorithm need to be taken through a
+    period of review. In this review, I would create similar analyses in
+    this lab, and make sure that the algorithm is up to the same
+    standard as scientific review (i.e. alpha .05 standard), ensuring
+    that the algorithm is not due to chance.
+
+# Stretch Goal
+
+Note this will be a work in progress, as it is a stretch goal and I am
+still learning.
+
+\*17. I reran the visualization from above, showing prior convictions.
+
+``` r
+race_graph %>%
+  ggplot(aes(
+    x = decile_score,
+    y = priors_count
+  ))+
+  geom_smooth()+
+  geom_jitter(width = .15, alpha = .6)+
+  facet_wrap(~race)+
+  theme_bw()+
+  labs(
+    x = "Risk score",
+    y = "Number of prior offenses",
+    title = "Race discrepancies for the number of convictions"
+  )
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+![](other-lab-09_files/figure-gfm/stretch%20other%20prior%20and%20risk%20score%20visual-1.png)<!-- -->
+
+As I explained above, the distribution for black defendants is more
+evenly spaced out compared to white defendants, which is more skewed
+left. It looks similar to the other graph, just looking at risk score.
+
+``` r
+COMPAS_race_graph
+```
+
+![](other-lab-09_files/figure-gfm/extra%20point-1.png)<!-- -->
+
+##### Question 19 - other variables of interest
+
+``` r
+race_graph %>%
+  ggplot(aes(
+    x = decile_score,
+    fill = c_charge_degree
+  ))+
+  geom_histogram(stat = "count")+
+  scale_fill_manual(labels = c("Felony", "Misdemeanor"), values = c("red3", "yellow3"))+
+  facet_grid(c_charge_degree ~ race, labeller = as_labeller( c(
+        'African-American' = "Black",
+        'Caucasian' = "White",
+        'F' = "Felony",
+       'M' = "Misdemeanor"
+        )))+
+  theme_bw()+
+  labs(
+    x = "Risk score",
+    y = "Number of prior offenses",
+    title = "Race discrepancies for the number of convictions"
+      )+
+    theme(legend.position = "none")
+```
+
+    ## Warning in geom_histogram(stat = "count"): Ignoring unknown parameters:
+    ## `binwidth`, `bins`, and `pad`
+
+![](other-lab-09_files/figure-gfm/COMPAS%20and%20other%20variables-1.png)<!-- -->
+
+Misdemeanors are generally your least severe charges. Felonies are
+murder, rape, breaking into cars, breaking into houses, they are more
+serious crimes. We can see there are a lot more felonies associated with
+black dependents than compared to white dependents. I would guess that
+the type of charge certainly helps lead to the disparities in risk
+score.
+
+### Building a fairer algorithm
+
+``` r
+recid_model <- glm(
+  two_year_recid ~ age + priors_count + c_charge_degree,
+  data = compas,
+  family = binomial()
+)
+
+
+compas <- compas %>%
+  mutate(
+    predicted_prob = predict(recid_model, type = "response"),
+    our_high_risk = predicted_prob >= 0.5
+  )
+```
