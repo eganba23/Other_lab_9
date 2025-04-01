@@ -32,8 +32,6 @@ ncol(compas)
 
 ## Part 1 - Exploring the Data
 
-Almost there! Keep building on your work and follow the same structure for any remaining exercises. Each exercise builds on the last, so take your time and make sure your code is working as expected.  
-
 1. Each row of the dataset represents an individual who arrested in Broward County, Florida. There are 7,214 people in the dataset, and 53 different variables
 
 2. There should be 7,214 unique people in the dataset. After a quick glance through the dataset using view(), I haven't seen a repeated ID number or person's name.
@@ -210,27 +208,27 @@ compas %>%
 
 ```{r risk score to recidivism visual}
 
+
 compas %>%
   ggplot(aes(
     x = two_year_recid,
     y = decile_score
   ))+
-  geom_smooth(formula = y~x, se = FALSE, color = "black")+
+  geom_smooth(formula = y~x, color = "black")+
+  theme_bw()+
    labs(
     x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
     y = "COMPAS risk score",
     title = "The relationship between risk scores and actual recidivism"
   )
 
-
-
 compas %>%
   ggplot(aes(
-    x = two_year_recid,
-    y = decile_score
+    x = decile_score
   ))+
-  geom_jitter()+
- # geom_smooth(formula = y~x, se = FALSE, color = "black")+
+  facet_wrap(~two_year_recid)+
+  geom_histogram()+
+  theme_bw()+
    labs(
     x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
     y = "COMPAS risk score",

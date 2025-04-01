@@ -8,7 +8,7 @@ Here is the link to the assignment page:
 includes the relevant information for the assignment alongside required
 questions I needed to answer.
 
-#### Note - This assignment is a work in progress and my answers may reflect confusion
+#### Note - This assignment is a work in progress and my answers may reflect this
 
 ### The data
 
@@ -270,7 +270,8 @@ compas %>%
     x = two_year_recid,
     y = decile_score
   ))+
-  geom_smooth(formula = y~x, se = FALSE, color = "black")+
+  geom_smooth(formula = y~x, color = "black")+
+  theme_bw()+
    labs(
     x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
     y = "COMPAS risk score",
@@ -285,17 +286,19 @@ compas %>%
 ``` r
 compas %>%
   ggplot(aes(
-    x = two_year_recid,
-    y = decile_score
+    x = decile_score
   ))+
-  geom_jitter()+
- # geom_smooth(formula = y~x, se = FALSE, color = "black")+
+  facet_wrap(~two_year_recid)+
+  geom_histogram()+
+  theme_bw()+
    labs(
     x = "Whether the defendant recidivated within two years (0 = no, 1 = yes)",
     y = "COMPAS risk score",
     title = "The relationship between risk scores and actual recidivism"
   )
 ```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
 ![](other-lab-09_files/figure-gfm/risk%20score%20to%20recidivism%20visual-2.png)<!-- -->
 
