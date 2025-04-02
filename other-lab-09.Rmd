@@ -38,6 +38,27 @@ ncol(compas)
 
 ### Visualizing demographic data
 
+
+#### Distribution of COMPAS risk scores.
+
+```{r basic distribution}
+
+compas %>%
+  ggplot(aes(
+    x = decile_score
+  ))+
+  geom_histogram(stat = "count")+
+  labs(
+    x = "risk score from 1-10",
+    y = NULL,
+    title = "Distrubtion of COMPAS Scores",
+    subtitle = "higher scores mean greater risk"
+  )
+
+```
+
+Skewed right, indicating there are more poeple with lower risk.
+
 #### The distribution of defendants by race
 ```{r graph race, warning = FALSE}
 Race_graph <- compas %>%
@@ -174,7 +195,50 @@ ggplot(aes(
 
 ```
 
-The downside is that I can't change the colors of each of the graphs to what I had them.
+Chat helped me figure out how to change all the colors to reflect the original colors I used. This was a direct copy paste, with me changing the colors.
+
+```{r optional demographic with color}
+
+compas_long %>% 
+  ggplot(aes(x = Value, fill = Value)) +   
+  geom_bar(alpha = 0.7) +   
+  geom_text(     
+    stat = "count",     
+    aes(y = ..count.., label = ..count..),     
+    vjust = -0.2,     
+    size = 3   
+  ) +   
+  theme_bw() +   
+  facet_wrap(~Category, 
+             labeller = as_labeller(c(`age_cat` = "Age", 
+                                      `race` = "Race", 
+                                      `sex` = "Sex")), 
+             scales = "free_x") +  
+  labs(     
+    x = NULL,     
+    y = "Count",     
+    title = "Distribution of Defendants",     
+    subtitle = "People arrested in Broward County, Florida"   
+  ) +   
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = -45, vjust = 0.5, hjust = .5)
+  ) + 
+  scale_fill_manual(
+    values = c("25 - 45" = "gray", 
+               "Greater than 45" = "gray", 
+               "Less than 25" = "gray",
+               "African-American" = "orange", 
+               "Caucasian" = "orange", 
+               "Asian" = "orange", 
+               "Hispanic" = "orange", 
+               "Native American" = "orange", 
+               "Other" = "orange",
+               "Male" = "royalblue", 
+               "Female" = "hotpink")
+  )
+
+```
 
 #### Visualization of the COMPAS risk scores
 
