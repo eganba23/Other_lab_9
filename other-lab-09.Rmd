@@ -276,7 +276,7 @@ compas %>%
   ggplot(aes(
     x = decile_score
   ))+
-  facet_wrap(~two_year_recid)+
+  facet_wrap(~two_year_recid, labeller = as_labeller(c(`0` = "Did not recidivate within two years", `1` = "Recidivated within two years")))+
   geom_histogram()+
   theme_bw()+
    labs(
