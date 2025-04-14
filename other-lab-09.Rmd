@@ -7,6 +7,8 @@ output: github_document
 
 Here is the link to the assignment page: https://datascience4psych.github.io/DataScience4Psych/lab09.html. This includes the relevant information for the assignment alongside required questions I needed to answer.
 
+Here is a link to an archvied version of the assignment: https://web.archive.org/web/20250414135239/https://datascience4psych.github.io/DataScience4Psych/lab09alt.html#part-4-understanding-the-sources-of-bias
+
 #### Note - This assignment is a work in progress and my answers may reflect this
 
 ```{r load-packages, message = FALSE, warning = FALSE, echo = FALSE}
